@@ -5,6 +5,10 @@ Bot: [KoniStoryBot](https://t.me/KoniStory_bot/app?startapp=C20WJXJv8)
 DONT FORGET TO CHANGE YOUR REFERRAL CODE in [line 65]
 
 How to run:
+```bash
+pip install brotli web3 aiohttp colorama loguru
+```
+
 1. run createevm.py
 2. run main.py
 
