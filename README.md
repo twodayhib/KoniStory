@@ -1,5 +1,10 @@
 Channel: [Yog's Channel](https://t.me/yogschannel)
+
 Bot: [KoniStoryBot](https://t.me/KoniStory_bot/app?startapp=C20WJXJv8)
+
+How to run:
+1. run createevm.py
+2. run main.py
 
 # KoniStory
 
