@@ -2,7 +2,9 @@ import aiohttp
 import asyncio
 from loguru import logger
 import json
-from colorama import init
+import logging
+from colorama import init, Fore, Back, Style
+from datetime import datetime
 
 init(autoreset=True)
 
@@ -26,10 +28,9 @@ class TheOrder:
             "User-Agent": "Mozilla/5.0 (Linux; U; Android 4.0.2; en-us; Galaxy Nexus Build/ICL53F) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30"
         }
 
-        # Configure Loguru without additional in-line color codes
         logger.remove()
         logger.add(
-            lambda msg: print(msg, end=""),  # No newline between logs
+            lambda msg: print(msg, end=""),
             format="<green>{time:HH:mm:ss}</green> | <level>{level}</level> | {message}",
             colorize=True,
             enqueue=True,
@@ -38,16 +39,16 @@ class TheOrder:
         )
 
     def print_banner(self):
-        banner = """
-        ┏━━━━┳┓╋╋╋╋╋┏━━━┓╋╋╋┏┓╋╋╋╋╋┏━━━┓╋╋┏┓╋╋╋╋╋┏━┓    Auto KoniStory Bot
-        ┃┏┓┏┓┃┃╋╋╋╋╋┃┏━┓┃╋╋╋┃┃╋╋╋╋╋┃┏━┓┃╋╋┃┃╋╋╋╋╋┃┏┛    Modified by @yogschannel
-        ┗┛┃┃┗┫┗━┳━━┓┃┃╋┃┣━┳━┛┣━━┳━┓┃┃╋┃┣━━┫┗━┳━━┳┛┗┓
-        ╋╋┃┃╋┃┏┓┃┃━┫┃┃╋┃┃┏┫┏┓┃┃━┫┏┛┃┗━┛┃━━┫┏┓┃┏┓┣┓┏┛
-        ╋╋┃┃╋┃┃┃┃┃━┫┃┗━┛┃┃┃┗┛┃┃━┫┃╋┃┏━┓┣━━┃┃┃┃┏┓┃┃┃
-        ╋╋┗┛╋┗┛┗┻━━┛┗━━━┻┛┗━━┻━━┻┛╋┗┛╋┗┻━━┻┛┗┻┛┗┛┗┛
-        """
+        banner = f"""{Fore.CYAN}
+    ┏━━━━┳┓     ┏━━━┓   ┏┓     ┏━━━┓  ┏┓     ┏━┓    Auto KoniStory Bot
+    ┃┏┓┏┓┃┃     ┃┏━┓┃   ┃┃     ┃┏━┓┃  ┃┃     ┃┏┛    created by @yogschannel
+    ┗┛┃┃┗┫┗━┳━━┓┃┃ ┃┣━┳━┛┣━━┳━┓┃┃ ┃┣━━┫┗━┳━━┳┛┗┓    @AIOTelegramManager
+      ┃┃ ┃┏┓┃┃━┫┃┃ ┃┃┏┫┏┓┃┃━┫┏┛┃┗━┛┃━━┫┏┓┃┏┓┣┓┏┛
+      ┃┃ ┃┃┃┃┃━┫┃┗━┛┃┃┃┗┛┃┃━┫┃ ┃┏━┓┣━━┃┃┃┃┏┓┃┃┃
+      ┗┛ ┗┛┗┻━━┛┗━━━┻┛┗━━┻━━┻┛ ┗┛ ┗┻━━┻┛┗┻┛┗┛┗┛
+    {Style.RESET_ALL}
+    """
         print(banner)
-        logger.info("Starting BeeHarvest Bot...")
 
     async def create_session(self):
         if not self.session:
@@ -142,31 +143,48 @@ class TheOrder:
             logger.opt(colors=True).error(f"<red>Error processing account:</red> {str(e)}")
             return False
 
-    async def run(self):
-        try:
-            self.print_banner()
-            await self.create_session()
-            
-            with open('data.txt', 'r') as f_data, open('address.txt', 'r') as f_address:
-                accounts = f_data.read().splitlines()
-                addresses = f_address.read().splitlines()
+    async def run_forever(self):
+        iteration = 1
+        TWO_HOURS = 2 * 60 * 60  # 2 hours in seconds
 
-            total_accounts = len(accounts)
-            
-            for i, (account, address) in enumerate(zip(accounts, addresses), 1):
-                logger.opt(colors=True).info(f"<cyan>Processing account {i}/{total_accounts}</cyan>")
-                success = await self.process_account(account, address)
+        while True:
+            try:
+                current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                logger.opt(colors=True).info(f"\n<cyan>Starting iteration {iteration} at {current_time}</cyan>")
                 
-                if i < total_accounts:
-                    status = "Successfully processed" if success else "Failed to process"
-                    logger.opt(colors=True).info(f"<yellow>{status} account. Waiting 3 seconds...</yellow>")
-                    await asyncio.sleep(3)
-            
-            logger.opt(colors=True).success(f"<green>Finished processing all {total_accounts} accounts</green>")
-            
-        finally:
-            await self.close_session()
+                self.print_banner()
+                await self.create_session()
+                
+                with open('data.txt', 'r') as f_data, open('address.txt', 'r') as f_address:
+                    accounts = f_data.read().splitlines()
+                    addresses = f_address.read().splitlines()
+
+                total_accounts = len(accounts)
+                
+                for i, (account, address) in enumerate(zip(accounts, addresses), 1):
+                    logger.opt(colors=True).info(f"<cyan>Processing account {i}/{total_accounts}</cyan>")
+                    success = await self.process_account(account, address)
+                    
+                    if i < total_accounts:
+                        status = "Successfully processed" if success else "Failed to process"
+                        logger.opt(colors=True).info(f"<yellow>{status} account. Waiting 3 seconds...</yellow>")
+                        await asyncio.sleep(3)
+                
+                logger.opt(colors=True).success(f"<green>Finished processing all {total_accounts} accounts in iteration {iteration}</green>")
+                
+                await self.close_session()
+                
+                next_run_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                logger.opt(colors=True).info(f"<yellow>Waiting 2 hours before next iteration. Next run at: {next_run_time}</yellow>")
+                await asyncio.sleep(TWO_HOURS)
+                iteration += 1
+                
+            except Exception as e:
+                logger.opt(colors=True).error(f"<red>Error in iteration {iteration}:</red> {str(e)}")
+                logger.opt(colors=True).info("<yellow>Attempting to restart in 60 seconds...</yellow>")
+                await asyncio.sleep(60)
+                continue
 
 if __name__ == "__main__":
     bot = TheOrder()
-    asyncio.run(bot.run())
+    asyncio.run(bot.run_forever())
